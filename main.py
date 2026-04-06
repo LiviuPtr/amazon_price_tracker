@@ -10,6 +10,7 @@ from sqlalchemy import create_engine
 from dotenv import load_dotenv
 import os
 
+print("Starting script...")
 
 url_list = ["https://www.amazon.com/GIGABYTE-GeForce-WINDFORCE-Graphics-GV-N5070WF3OC-12GD/dp/B0DTQMLX4F/ref=sr_1_1?crid=2MUUBE8GLTBBN&dib=eyJ2IjoiMSJ9.FG3VxBsny1zXGlw-UW5EUpWh_u02HudejmbrWOOeumnI-wmdxdDtosLJ4jlgRgz4A76V2yPXesKtr_GczTkIQ3Z3KHragv-fjMZwt2GKx6JDWoqx6p9OzhhgJzciBgfeZc2tft4jZG0kkMGJ-Dw5Oj_NAxbjRzkRHTwrw10MzljC5fXUt3otG8bCNWx1kU24T5eZg4bjWE9DnM8AwQLCwweqxJorGqSh5UmboXmYZK0.mKhsM9QYM_hnrsnEPpVXhtS6TxAJi45pHHAzLCyvClY&dib_tag=se&keywords=rtx%2B5070&qid=1775217841&sprefix=rtx%2Caps%2C254&sr=8-1&th=1",
             "https://www.amazon.com/PNY-Overclocked-Graphics-2-4-Slot-Epic-XTM/dp/B0DYPGBX6J/ref=sims_dp_d_dex_ai_rank_model_1_d_v1_d_sccl_1_1/135-9892342-9905632?pd_rd_w=iD1nN&content-id=amzn1.sym.bb4a0aac-c2b4-4b4b-a0c8-9aa89b28dce3&pf_rd_p=bb4a0aac-c2b4-4b4b-a0c8-9aa89b28dce3&pf_rd_r=QJTQTZP9M9Y39MNMN9ZX&pd_rd_wg=BFrhG&pd_rd_r=4daea938-0807-4877-ac90-9cc22e00244b&pd_rd_i=B0DYPGBX6J&th=1",
@@ -18,6 +19,8 @@ url_list = ["https://www.amazon.com/GIGABYTE-GeForce-WINDFORCE-Graphics-GV-N5070
 
 
 def get_amazon_price(url):
+
+    print("Scraping:" + url)
 
     options = webdriver.ChromeOptions()
     options.add_argument('--headless=new')
@@ -51,7 +54,11 @@ db_name = os.getenv("db_name_key")
 db_user = os.getenv("db_user_key")
 db_pass = os.getenv("db_pass_key")
 
+print("Connecting to database...")
+
 db_conn = psycopg2.connect(host = db_host, database = db_name, user = db_user, password = db_pass)
+
+print("Connecton successful!")
 
 c = db_conn.cursor()
 engine = create_engine(f"postgresql://{db_user}:{db_pass}@{db_host}/{db_name}")
@@ -98,6 +105,7 @@ def plot():
         plt.xticks(rotation=30)
 
         plt.show()
+        plt.savefig('prices.png', dpi=300)
 
 
 def insert_product(url):
@@ -106,16 +114,15 @@ def insert_product(url):
         return name, url, price
     return None
 
-with concurrent.futures.ThreadPoolExecutor(max_workers = 4) as executor:
+#Only use multiple workers if you have enough RAM else the script/ server may crash!
+with concurrent.futures.ThreadPoolExecutor(max_workers = 1) as executor:
     thread_results = list(executor.map(insert_product, url_list))
 
     for results in thread_results:
         if results:
             insert_db(results[0], results[1], results[2])
 
-
 plot()
 
 c.close()
 
-input("Press any key to exit.")
