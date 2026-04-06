@@ -17,8 +17,11 @@ url_list = ["https://www.amazon.com/GIGABYTE-GeForce-WINDFORCE-Graphics-GV-N5070
             "https://www.amazon.com/ASUS-SFF-Ready-Graphics-2-5-Slot-Axial-tech/dp/B0DS6WPTLL/ref=sims_dp_d_dex_ai_rank_model_1_d_v1_d_sccl_1_4/135-9892342-9905632?pd_rd_w=iD1nN&content-id=amzn1.sym.bb4a0aac-c2b4-4b4b-a0c8-9aa89b28dce3&pf_rd_p=bb4a0aac-c2b4-4b4b-a0c8-9aa89b28dce3&pf_rd_r=QJTQTZP9M9Y39MNMN9ZX&pd_rd_wg=BFrhG&pd_rd_r=4daea938-0807-4877-ac90-9cc22e00244b&pd_rd_i=B0DS6WPTLL&th=1",
             "https://www.amazon.com/GIGABYTE-GeForce-WINDFORCE-Graphics-GV-N5060WF2OC-8GD/dp/B0F8LDHQ7Y/ref=sims_dp_d_dex_ai_rank_model_1_d_v1_d_sccl_1_6/135-9892342-9905632?pd_rd_w=iD1nN&content-id=amzn1.sym.bb4a0aac-c2b4-4b4b-a0c8-9aa89b28dce3&pf_rd_p=bb4a0aac-c2b4-4b4b-a0c8-9aa89b28dce3&pf_rd_r=QJTQTZP9M9Y39MNMN9ZX&pd_rd_wg=BFrhG&pd_rd_r=4daea938-0807-4877-ac90-9cc22e00244b&pd_rd_i=B0F8LDHQ7Y&th=1"]
 
+currency = None
 
 def get_amazon_price(url):
+
+    global currency
 
     print("Scraping:" + url)
 
@@ -38,6 +41,8 @@ def get_amazon_price(url):
 
         title = driver.find_element(By.ID, "productTitle").text.strip()
 
+        if not currency:
+            currency = driver.find_element(By.CLASS_NAME, "a-price-symbol").text.strip()
 
     except:
         return None, None
@@ -84,7 +89,7 @@ def insert_db(name, url, price):
 
 def plot():
     with db_conn:
-        plt.figure(figsize=(10, 6))
+        plt.figure(figsize=(15, 6))
 
         df = pd.read_sql_query("""SELECT pr.profile_id, p.name, pr.price, pr.timestamp
                                       FROM prices pr
@@ -96,7 +101,7 @@ def plot():
         for name, group in df.groupby('short_name'):
             plt.plot(group['timestamp'], group['price'], marker='.', label=name)
 
-        plt.title('Prices over time')
+        plt.title(f'Prices over time (All Prices in {currency})')
         plt.xlabel('Time')
         plt.ylabel('Price')
 
