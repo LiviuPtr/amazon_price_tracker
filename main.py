@@ -1,4 +1,5 @@
-from selenium import webdriver
+from pyvirtualdisplay import Display
+import undetected_chromedriver as uc
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -25,14 +26,13 @@ def get_amazon_price(url):
 
     print("Scraping:" + url)
 
-    options = webdriver.ChromeOptions()
-    options.add_argument('--headless=new')
+    options = uc.ChromeOptions()
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
-    driver = webdriver.Chrome(options = options)
+    driver = uc.Chrome(options = options, headless = False, version_main = 146)
 
     driver.get(url)
-    total = 0
+
     try:
         value_integer = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "a-price-whole"))).text.replace(",", "")
         value_integer = float(value_integer)
@@ -63,7 +63,7 @@ print("Connecting to database...")
 
 db_conn = psycopg2.connect(host = db_host, database = db_name, user = db_user, password = db_pass)
 
-print("Connecton successful!")
+print("Connection successful!")
 
 c = db_conn.cursor()
 engine = create_engine(f"postgresql://{db_user}:{db_pass}@{db_host}/{db_name}")
@@ -79,6 +79,8 @@ c.execute("""CREATE TABLE IF NOT EXISTS prices (
             price REAL NOT NULL,
             timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (profile_id) REFERENCES profiles (id) ON DELETE CASCADE)""")
+
+db_conn.commit()
 
 def insert_db(name, url, price):
     with db_conn:
@@ -112,12 +114,14 @@ def plot():
         plt.show()
         plt.savefig('prices.png', dpi=300)
 
-
 def insert_product(url):
     name, price = get_amazon_price(url)
     if name and price:
         return name, url, price
     return None
+
+display = Display(visible = False, size = (1920, 1080))
+display.start()
 
 #Only use multiple workers if you have enough RAM else the script/ server may crash!
 with concurrent.futures.ThreadPoolExecutor(max_workers = 1) as executor:
@@ -130,4 +134,5 @@ with concurrent.futures.ThreadPoolExecutor(max_workers = 1) as executor:
 plot()
 
 c.close()
-
+db_conn.close()
+display.stop()

@@ -7,7 +7,6 @@ import sqlite3
 import pandas as pd
 import matplotlib.pyplot as plt
 
-
 url_list = ["https://www.amazon.com/GIGABYTE-GeForce-WINDFORCE-Graphics-GV-N5070WF3OC-12GD/dp/B0DTQMLX4F/ref=sr_1_1?crid=2MUUBE8GLTBBN&dib=eyJ2IjoiMSJ9.FG3VxBsny1zXGlw-UW5EUpWh_u02HudejmbrWOOeumnI-wmdxdDtosLJ4jlgRgz4A76V2yPXesKtr_GczTkIQ3Z3KHragv-fjMZwt2GKx6JDWoqx6p9OzhhgJzciBgfeZc2tft4jZG0kkMGJ-Dw5Oj_NAxbjRzkRHTwrw10MzljC5fXUt3otG8bCNWx1kU24T5eZg4bjWE9DnM8AwQLCwweqxJorGqSh5UmboXmYZK0.mKhsM9QYM_hnrsnEPpVXhtS6TxAJi45pHHAzLCyvClY&dib_tag=se&keywords=rtx%2B5070&qid=1775217841&sprefix=rtx%2Caps%2C254&sr=8-1&th=1",
             "https://www.amazon.com/PNY-Overclocked-Graphics-2-4-Slot-Epic-XTM/dp/B0DYPGBX6J/ref=sims_dp_d_dex_ai_rank_model_1_d_v1_d_sccl_1_1/135-9892342-9905632?pd_rd_w=iD1nN&content-id=amzn1.sym.bb4a0aac-c2b4-4b4b-a0c8-9aa89b28dce3&pf_rd_p=bb4a0aac-c2b4-4b4b-a0c8-9aa89b28dce3&pf_rd_r=QJTQTZP9M9Y39MNMN9ZX&pd_rd_wg=BFrhG&pd_rd_r=4daea938-0807-4877-ac90-9cc22e00244b&pd_rd_i=B0DYPGBX6J&th=1",
             "https://www.amazon.com/ASUS-SFF-Ready-Graphics-2-5-Slot-Axial-tech/dp/B0DS6WPTLL/ref=sims_dp_d_dex_ai_rank_model_1_d_v1_d_sccl_1_4/135-9892342-9905632?pd_rd_w=iD1nN&content-id=amzn1.sym.bb4a0aac-c2b4-4b4b-a0c8-9aa89b28dce3&pf_rd_p=bb4a0aac-c2b4-4b4b-a0c8-9aa89b28dce3&pf_rd_r=QJTQTZP9M9Y39MNMN9ZX&pd_rd_wg=BFrhG&pd_rd_r=4daea938-0807-4877-ac90-9cc22e00244b&pd_rd_i=B0DS6WPTLL&th=1",
@@ -24,7 +23,7 @@ def get_amazon_price(url):
     driver = webdriver.Chrome(options = options)
 
     driver.get(url)
-    total = 0
+
     try:
         value_integer = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "a-price-whole"))).text.replace(",", "")
         value_integer = float(value_integer)
@@ -44,7 +43,6 @@ def get_amazon_price(url):
         driver.quit()
 
     return title, total
-
 
 db_conn = sqlite3.connect("amazon.db")
 db_conn.execute("PRAGMA foreign_keys = ON")
@@ -107,7 +105,6 @@ with concurrent.futures.ThreadPoolExecutor(max_workers = 4) as executor:
     for results in thread_results:
         if results:
             insert_db(results[0], results[1], results[2])
-
 
 plot()
 
